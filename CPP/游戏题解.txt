@@ -1,0 +1,163 @@
+分析
+这道题一共分为以下部分：
+
+存储输入
+先把 N , M , K 输入
+
+int n,m,k;
+cin>>n>>m>>k;
+先分别定义两个数组，循环输入两者的出拳
+
+int nn[n+1],mm[m+1];
+for(int i=1;i<=n;i++) cin>>nn[i];
+for(int i=1;i<=m;i++) cin>>mm[i];
+判断输赢
+因为我们不用判断平局和输的情况，所以只要知道赢的条件即可。
+
+赢的情况：
+
+1情况	2情况	3情况
+你	1(石头)	2(剪刀)	3(布)
+楠楠	2(剪刀)	3(布)	1(石头)
+数字差(下面减上面)	1	-2
+那我们只需判断差为 1 或者 -2 的情况
+
+if( 楠楠出的 - 你出的 == 1 ||
+   楠楠出的 - 你出的 == -2){
+    ans++;
+}
+循环每一次猜拳
+这个直接循环，但对于AC还不够精。
+
+for(int i=1;i<=k/*第一次到最后一次*/;i++){
+    if语句
+}
+表达两人所出的
+因为循环到一个周期后又要回到第一个元素
+
+1 2 3 4---1 2 3 4---1 2...
+
+所以我们可以分别加一个 ni 和 mi 变量作为数组的下标，每次循环分别加1，ni 大于 n 时，让 ni 等于 1 ，mi 大于 m 时，让 mi 等于 1。
+
+int ni=0,mi=0;
+int ans=0;
+for(int i=1;i<=k;i++){
+    ni++;
+    mi++;
+    if(ni>n) ni=1;
+    if(mi>m) mi=1;
+    if(mm[mi]/*楠楠出的*/ - nn[ni]/*你出的*/ == 1 ||
+       mm[mi]/*楠楠出的*/ - nn[ni]/*你出的*/ == -2){
+        ans++;
+    }
+}
+当然，也有其他办法。 我们让循环中的 i 分别取余 n 和 m 做到相同效果。
+
+假如 n 为 3 ，m 为 4：
+
+i	1	2	3	4	5
+i%n	1	2	0	1	2
+i%m	3	0	1
+如果用这两个做下标，中间总会有 0，要知道我们没有输入 nn[0] 的！这个 nn[0] 正是我们需要的 nn[n] (最后一项)，所以加上赋值：
+
+nn[0]=nn[n];
+mm[0]=mm[m];
+int ans=0;
+for(int i=1;i<=k;i++){
+    if(mm[i%m]-nn[i%n]==1||
+       mm[i%m]-nn[i%n]==-2){
+        ans++;
+    }
+}
+到这里我们分析得差不多了，接下来上一下代码
+
+代码 （80分）
+#include<iostream>
+using namespace std;
+int main(){
+    int n,m,k;
+    cin>>n>>m>>k;
+    int nn[n+1],mm[m+1];
+    for(int i=1;i<=n;i++) cin>>nn[i];
+    for(int i=1;i<=m;i++) cin>>mm[i];
+    nn[0]=nn[n];
+    mm[0]=mm[m];
+    int ans=0;
+    for(int i=1;i<=k;i++){
+        if(mm[i%m]-nn[i%n]==1||
+           mm[i%m]-nn[i%n]==-2){
+            ans++;
+        }
+    }
+    cout<<ans;
+}
+还有两个点超时了，肯定是循环哪里出了问题，竟循环了10亿次，评测电脑太烂了，跑不完，要简化。
+
+概念
+仔细想想，模拟一下(假如 n 为 2 ，m 为 3)：
+
+i	1	2	3	4	5	6	7	8	9	10	...
+n	1	2	1	2	1	2	1	2	1	2	...
+m	3	1	2	3	3	1
+从 i6 开始，往后开始循环了。 这说明，两个长度相乘为一个周期，当然还能更简： 虽然 5 × 10 = 50 ，可一个周期应为 10 ，根据研究，最小周期应为两长度的最小公倍数。 公式为：a × b ÷ 最大公因数 最大公因数用 辗转相除法 即可快速得出：
+
+int _gcd(int a,int b){
+    return b==0?a:_gcd(b,a%b);
+    //如果b为0，返回a，否则递归
+}//就是个求最大公因数的东西
+然后求最小公倍数，也就是一周期： kk = n*m/_gcd(n,m);
+
+接下来，只要求出有多少个周期与剩下不完整的周期的答案数即可。
+
+我们用总次数除以单个周期便得到周期数： k / kk = kn ...... r 这个 kn 就是我们的周期数，余数 r 就是不完整的次数。我们用一周期的答案乘周期数再加剩余次数的答案得到总答案。
+
+剩余次数的答案也是用到上面的循环求解，如果在上面的循环加上一个 bool数组 就可以直接判断：
+
+bool a[kk+1];
+memset(a,0,sizeof(a));
+nn[0]=nn[n];
+mm[0]=mm[m];
+int s=0;
+for(int i=1;i<=kk;i++){
+    if(mm[i%m]-nn[i%n]==1||
+       mm[i%m]-nn[i%n]==-2){
+    a[i]=1;
+    s++;
+    }
+}
+int ans=s*(k/kk),r=k%kk;
+for(int i=1;i<=r;i++){
+    if(a[i]==1) ans++;
+}
+讲得差不多了，该上AC代码了。
+
+AC代码
+#include<iostream>
+#include<cstring>
+using namespace std;
+int _gcd(int a,int b){
+    return b==0?a:_gcd(b,a%b);
+}
+int main(){
+    int n,m,k;
+    cin>>n>>m>>k;
+    int nn[n+1],mm[m+1],kk=m*n/_gcd(m,n);
+    bool a[kk+1];
+    memset(a,0,sizeof(a));
+    for(int i=1;i<=n;i++) cin>>nn[i];
+    for(int i=1;i<=m;i++) cin>>mm[i];
+    nn[0]=nn[n];
+    mm[0]=mm[m];
+    int s=0;
+    for(int i=1;i<=kk;i++){
+        if(mm[i%m]-nn[i%n]==1||mm[i%m]-nn[i%n]==-2){
+            a[i]=1;
+            s++;
+        }
+    }
+    int ans=s*(k/kk),lef=k%kk;
+    for(int i=1;i<=lef;i++){
+        if(a[i]==1) ans++;
+    }
+    cout<<ans;
+}
