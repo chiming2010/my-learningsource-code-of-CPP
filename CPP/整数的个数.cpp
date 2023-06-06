@@ -9,6 +9,8 @@ int main(){
         if(j==10) ten++;
         if(j==5) five++;
     }
-    cout<<one<<endl<<five<<endl<<ten<<endl;
+    cout<<one<<endl
+        <<five<<endl
+        <<ten<<endl;
     return 0;
 }
